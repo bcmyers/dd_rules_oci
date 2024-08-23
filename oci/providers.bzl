@@ -41,7 +41,7 @@ OCIImageManifest = provider(
 OCIImageIndexManifest = provider(
     doc = "",
     fields = {
-        "manifests": "List of desciptors",
+        "manifests": "List of descriptors",
         "annotations": "String map of arbitrary metadata",
     },
 )
@@ -54,5 +54,13 @@ OCIPlatform = provider(
         "os_version": "OSVersion is an optional field specifying the operating system version",
         "os_features": "OSFeatures is an optional field specifying an array of strings, each listing a required OS feature",
         "variant": "Variant is an optional field specifying a variant of the CPU",
+    },
+)
+
+OCIImageLayoutInfo = provider(
+    doc = "This provider represents a list of directories that each contain an OCI Image Layout." +
+    "See https://github.com/opencontainers/image-spec/blob/main/image-layout.md for a description of the format.",
+    fields = {
+        "oci_image_layout_dirs": "A list of directories, each containing an OCI Image Layout."
     },
 )
