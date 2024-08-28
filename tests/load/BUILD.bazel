@@ -1,0 +1,40 @@
+load("//oci:defs.bzl", "oci_image", "oci_image_layer")
+
+oci_image_layer(
+    name = "layer",
+    file_map = {
+        ":run.sh": "/usr/local/bin/run.sh",
+    },
+)
+
+oci_image(
+    name = "image",
+    arch = "arm64",
+    base = "@ubuntu_focal//image",
+    layers = [":layer"],
+    os = "linux",
+)
+
+oci_image_layer(
+    name = "layer2",
+    file_map = {
+        ":run.sh": "/run.sh",
+    },
+)
+
+oci_image(
+    name = "image2",
+    arch = "arm64",
+    base = ":image",
+    gzip = False,
+    layers = [":layer2"],
+    os = "linux",
+)
+
+oci_image(
+    name = "image3",
+    arch = "amd64",
+    base = "@ubuntu_focal//image",
+    layers = [":layer"],
+    os = "linux",
+)

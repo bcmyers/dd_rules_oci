@@ -19,6 +19,50 @@ var app = &cli.App{
 	},
 	Commands: []*cli.Command{
 		{
+			Name:   "load",
+			Usage:  "TODO",
+			Action: LoadCmd,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "file",
+					Required: true,
+					Usage:    "TODO",
+				},
+			},
+		},
+
+		{
+			Name:   "tar",
+			Usage:  "TODO",
+			Action: TarCmd,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "blob-index",
+					Required: true,
+					Usage:    "TODO",
+				},
+				&cli.StringFlag{
+					Name:     "descriptor-file",
+					Required: true,
+					Usage:    "TODO",
+				},
+				&cli.StringSliceFlag{
+					Name:     "file",
+					Required: true,
+					Usage:    "TODO",
+				},
+				&cli.BoolFlag{
+					Name:  "gzip",
+					Usage: "TODO",
+				},
+				&cli.StringFlag{
+					Name:     "out",
+					Required: true,
+					Usage:    "TODO",
+				},
+			},
+		},
+		{
 			Name:   "pull",
 			Usage:  "Pull an OCI artifact",
 			Action: PullCmd,

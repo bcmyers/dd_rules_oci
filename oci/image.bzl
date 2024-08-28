@@ -1,4 +1,6 @@
+load("@com_github_datadog_rules_oci//oci:load.bzl", _oci_image_load = "oci_image_load")
 load("@com_github_datadog_rules_oci//oci:providers.bzl", "OCIDescriptor", "OCILayout")
+load("@com_github_datadog_rules_oci//oci:tar.bzl", _oci_image_tar = "oci_image_tar")
 
 def get_descriptor_file(ctx, desc):
     if hasattr(desc, "descriptor_file"):
@@ -140,7 +142,7 @@ oci_image_index = rule(
 def _oci_image_impl(ctx):
     toolchain = ctx.toolchains["@com_github_datadog_rules_oci//oci:toolchain"]
 
-    layout = ctx.attr.base[OCILayout]
+    base_layout = ctx.attr.base[OCILayout]
 
     base_desc = get_descriptor_file(ctx, ctx.attr.base[OCIDescriptor])
 
@@ -174,7 +176,7 @@ def _oci_image_impl(ctx):
     ctx.actions.run(
         executable = toolchain.sdk.ocitool,
         arguments = [
-                        "--layout={}".format(layout.blob_index.path),
+                        "--layout={}".format(base_layout.blob_index.path),
                         "append-layers",
                         "--bazel-version-file={}".format(ctx.version_file.path),
                         "--base={}".format(base_desc.path),
@@ -193,10 +195,10 @@ def _oci_image_impl(ctx):
                     ["--annotations={}={}".format(k, v) for k, v in annotations.items()] +
                     ["--labels={}={}".format(k, v) for k, v in labels.items()] +
                     ["--env={}".format(env) for env in ctx.attr.env],
-        inputs = [ctx.version_file, base_desc, layout.blob_index, entrypoint_config_file] +
+        inputs = [ctx.version_file, base_desc, base_layout.blob_index, entrypoint_config_file] +
                  ctx.files.layers +
                  layer_descriptor_files +
-                 layout.files.to_list(),
+                 base_layout.files.to_list(),
         outputs = [
             manifest_file,
             config_file,
@@ -211,7 +213,10 @@ def _oci_image_impl(ctx):
         ),
         OCILayout(
             blob_index = layout_file,
-            files = depset(ctx.files.layers + [manifest_file, config_file, layout_file]),
+            files = depset(
+                ctx.files.layers + [manifest_file, config_file, layout_file],
+                transitive = [base_layout.files],
+            ),
         ),
         DefaultInfo(
             files = depset([
@@ -224,7 +229,7 @@ def _oci_image_impl(ctx):
         ),
     ]
 
-oci_image = rule(
+_oci_image = rule(
     implementation = _oci_image_impl,
     doc = """Creates a new image manifest and config by appending the `layers` to an existing image
     manifest and config defined by `base`.  If `base` is an image index, then `os` and `arch` will
@@ -249,7 +254,7 @@ oci_image = rule(
             doc = "Used to extract a manifest from base if base is an index",
         ),
         "env": attr.string_list(
-            doc = """Entries are in the format of `VARNAME=VARVALUE`. These values act as defaults and 
+            doc = """Entries are in the format of `VARNAME=VARVALUE`. These values act as defaults and
             are merged with any specified when creating a container.""",
         ),
         "layers": attr.label_list(
@@ -274,3 +279,12 @@ oci_image = rule(
     },
     toolchains = ["@com_github_datadog_rules_oci//oci:toolchain"],
 )
+
+def oci_image(*, name, **kwargs):
+    gzip = kwargs.pop("gzip", True)
+
+    _oci_image(name = name, **kwargs)
+
+    _oci_image_tar(name = "{}.tar".format(name), image = name, gzip = gzip)
+
+    _oci_image_load(name = "{}.load".format(name), tar = "{}.tar".format(name))

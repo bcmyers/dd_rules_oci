@@ -46,6 +46,14 @@ OCIImageIndexManifest = provider(
     },
 )
 
+OCIImageTar = provider(
+    doc = "TODO",
+    fields = {
+        "file": "TODO",
+        "gzip": "TODO",
+    },
+)
+
 OCIPlatform = provider(
     doc = "Platform describes the platform which the image in the manifest runs on",
     fields = {

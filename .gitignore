@@ -4,3 +4,6 @@ bazel-rules_oci
 bazel-testlogs
 
 bin/ocitool-*
+
+foo
+bazel-dd_rules_oci
